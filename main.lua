@@ -2,6 +2,7 @@ local players, admins, keys = {}, {
     ["Poklava#0000"] = true
 }, {0, 1, 2, 3, 32}
 local yams, teams, gameStarted = {}, {"pac", "ghost"}, false
+local timer, roundTime = 0, 0
 local score = {
     pac = 0,
     ghost = 0,
@@ -19,8 +20,8 @@ local yamColors = {
     yellow = '179d81dfebe.png' -- yellow
 }
 for _, i in next,
-    {'AfkDeath', 'AutoShaman', 'MinimalistMode', 'WatchCommand', 'MortCommand', 'AutoScore',
-     'PhysicalConsumables', 'AutoTimeLeft'} do
+    {'AfkDeath', 'AutoShaman', 'MinimalistMode', 'WatchCommand', 'MortCommand', 'AutoScore', 'PhysicalConsumables',
+     'AutoTimeLeft'} do
     tfm.exec["disable" .. i]()
 end
 
@@ -60,16 +61,23 @@ spawnYams = function()
 end
 
 stopGame = function()
-    score["winnerTeam"] = score["yamCollected"] >= #yams and "<font color='#FFFF00'>PACS</font>" or getAlive("pac") <= 0 and "<font color='#7700FF'>GHOSTS</font>" or "<font color='#FFFFFF'>DRAW</font>"
-    if getAlive("pac") <= 0 and gameStarted then
-        score["ghost"] = score["ghost"] + 1
+    score["winnerTeam"] =
+        score["yamCollected"] >= #yams and "<font color='#FFFF00'>PACS</font>" or getAlive("pac") <= 0 and
+            "<font color='#7700FF'>GHOSTS</font>" or "<font color='#FFFFFF'>DRAW</font>"
+            ui.addTextArea(textAreaId.winnerText,
+                "<p align='center'><font size='100'>\n" .. score["winnerTeam"] .. "</font></p>", nil, 0, 17, 800, 383,
+                0x000000, 0x7700FF, 0.5, true)
+    if score["winnerTeam"] == "<font color='#FFFFFF'>DRAW</font>" then
+        return
     end
-    ui.addTextArea(textAreaId.winnerText, "<p align='center'><font size='100'>\n"..score["winnerTeam"].."</font></p>", nil, 0, 17, 800, 383, 0x000000, 0x7700FF, 0.5, true)
-    tfm.exec.setGameTime(0)
+    for _, i in next, {"pac", "ghost"} do
+        if getAlive(i) > 0 and gameStarted then
+            score[i] = score[i] + 1
+        end
+    end
     for name in next, players do
         players[name].team = nil
     end
-    gameStarted = false
 end
 
 setTeams = function()
@@ -137,33 +145,34 @@ for name in next, tfm.get.room.playerList do
     eventNewPlayer(name)
 end
 
-local timer, roundTime = 0, 0
 eventLoop = function(et, rt)
     if gameStarted then
-        roundTime = roundTime + 1
-        if roundTime == (60*5+3) * 2 then
+        roundTime = roundTime + 0.5
+        if roundTime >= 60 * 5 + 3 then
             stopGame()
             roundTime = 0
         end
-    end
-    for name in next, players do
-        if players[name].cooldown > 0 then
-            players[name].cooldown = players[name].cooldown - 1
-        else
-            if players[name].team == "ghost" then
-                tfm.exec.respawnPlayer(name)
+        for name in next, players do
+            if players[name].cooldown > 0 then
+                players[name].cooldown = players[name].cooldown - 1
+            else
+                if players[name].team == "ghost" then
+                    tfm.exec.respawnPlayer(name)
+                end
+                tfm.exec.setNameColor(name, players[name].team == "pac" and 0xffff00 or 0x7700ff)
             end
-            tfm.exec.setNameColor(name, players[name].team == "pac" and 0xffff00 or 0x7700ff)
         end
-    end
-    if score["winnerTeam"] or rt <= 1 then
-        timer = timer + 1
-        stopGame()
-        if timer >= 8 then
-            ui.removeTextArea(textAreaId.winnerText, nil)
-            tfm.exec.newGame(maps[1])
-            score["winnerTeam"] = nil
-            timer = 0
+        if score["winnerTeam"] then
+            tfm.exec.setGameTime(0)
+            stopGame()
+            timer = timer + 1
+            if timer >= 5 then
+                ui.removeTextArea(textAreaId.winnerText, nil)
+                tfm.exec.newGame(maps[1])
+                score["winnerTeam"] = false
+                gameStarted = false
+                timer = 0
+            end
         end
     end
 end
@@ -247,7 +256,9 @@ eventKeyboard = function(name, key, down, x, y)
                 if players[name].team == "ghost" or players[name].cooldown > 0 then
                     tfm.exec.killPlayer(getClosestPlayerTo(name))
                     if getAlive("pac") <= 0 then
-                        stopGame()
+                        score["winnerTeam"] =
+                        score["yamCollected"] >= #yams and "<font color='#FFFF00'>PACS</font>" or getAlive("pac") <= 0 and
+                            "<font color='#7700FF'>GHOSTS</font>" or "<font color='#FFFFFF'>DRAW</font>"
                     end
                 end
             end
@@ -262,7 +273,9 @@ eventPlayerBonusGrabbed = function(name, bonusId)
         tfm.exec.setNameColor(name, 0xff0000)
     end
     if score["yamCollected"] >= #yams then
-        stopGame()
+        score["winnerTeam"] =
+                        score["yamCollected"] >= #yams and "<font color='#FFFF00'>PACS</font>" or getAlive("pac") <= 0 and
+                            "<font color='#7700FF'>GHOSTS</font>" or "<font color='#FFFFFF'>DRAW</font>"
     end
     tfm.exec.removeBonus(bonusId, nil)
     tfm.exec.removeImage(yams[bonusId].color)
