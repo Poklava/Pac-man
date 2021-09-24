@@ -166,6 +166,7 @@ eventLoop = function(et, rt)
             tfm.exec.setGameTime(0)
             stopGame()
             timer = timer + 1
+            roundTime = 0
             if timer >= 5 then
                 ui.removeTextArea(textAreaId.winnerText, nil)
                 tfm.exec.newGame(maps[1])
