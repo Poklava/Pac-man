@@ -226,31 +226,31 @@ eventKeyboard = function(name, key, down, x, y)
     if gameStarted then
         if key == 1 then
             if down then
-                tfm.exec.movePlayer(name, 0, 0, false, 0, -players[name].speed, false)
+                tfm.exec.movePlayer(name, 0, 0, false, nil, -players[name].speed, false)
             else
-                tfm.exec.movePlayer(name, 0, 0, false, 0, -1, false)
-                tfm.exec.movePlayer(name, 0, 0, false, 0, 1, true)
+                tfm.exec.movePlayer(name, 0, 0, false, nil, -1, false)
+                tfm.exec.movePlayer(name, 0, 0, false, nil, 1, true)
             end
         elseif key == 3 then
             if down then
-                tfm.exec.movePlayer(name, 0, 0, false, 0, players[name].speed, false)
+                tfm.exec.movePlayer(name, 0, 0, false, nil, players[name].speed, false)
             else
-                tfm.exec.movePlayer(name, 0, 0, false, 0, -1, false)
-                tfm.exec.movePlayer(name, 0, 0, false, 0, 1, true)
+                tfm.exec.movePlayer(name, 0, 0, false, nil, -1, false)
+                tfm.exec.movePlayer(name, 0, 0, false, nil, 1, true)
             end
         elseif key == 0 then
             if down then
-                tfm.exec.movePlayer(name, 0, 0, false, -players[name].speed + 5, 0, false)
+                tfm.exec.movePlayer(name, 0, 0, false, -players[name].speed + 5, nil, false)
             else
-                tfm.exec.movePlayer(name, 0, 0, false, -1, 0, false)
-                tfm.exec.movePlayer(name, 0, 0, false, 1, 0, true)
+                tfm.exec.movePlayer(name, 0, 0, false, -1, nil, false)
+                tfm.exec.movePlayer(name, 0, 0, false, 1, nil, true)
             end
         elseif key == 2 then
             if down then
                 tfm.exec.movePlayer(name, 0, 0, false, players[name].speed - 5, 0, false)
             else
-                tfm.exec.movePlayer(name, 0, 0, false, -1, 0, false)
-                tfm.exec.movePlayer(name, 0, 0, false, 1, 0, true)
+                tfm.exec.movePlayer(name, 0, 0, false, -1, nil, false)
+                tfm.exec.movePlayer(name, 0, 0, false, 1, nil, true)
             end
         elseif key == 32 then
             if not tfm.get.room.playerList[name].isDead and players[getClosestPlayerTo(name)] then
